@@ -32,9 +32,19 @@ __global__ void mysgemm(int m, int n, int k, const float *A, const float *B, flo
     unsigned int col = blockIdx.x*blockDim.x + threadIdx.x;
 
     float sum = 0.0f;
-    for (unsigned int tile = 0; tile < m*n/TILE_SIZE; ++tile){
-        A_s[threadIdx.y][threadIdx.x] = A[row * n + tile * TILE_SIZE + threadIdx.x];
-        B_s[threadIdx.y][threadIdx.x] = B[(tile * TILE_SIZE + threadIdx.y) * n + col];
+    for (unsigned int tile = 0; tile < ceil(m/(float)TILE_SIZE); ++tile){
+        if ((row < m) && (tile * TILE_SIZE + threadIdx.x) < m){
+            A_s[threadIdx.y][threadIdx.x] = A[row * m + tile * TILE_SIZE + threadIdx.x];
+        }
+        else {
+            A_s[threadIdx.y][threadIdx.x] = 0.0f;
+        }
+        if ((tile * TILE_SIZE + threadIdx.y) < m && col < m){
+            B_s[threadIdx.y][threadIdx.x] = B[(tile * TILE_SIZE + threadIdx.y) * n + col];
+        }
+        else{
+            B_s[threadIdx.x][threadIdx.y] = 0.0f;
+        };
         __syncthreads();
 
         for (unsigned int i = 0; i < TILE_SIZE; ++i) {
@@ -43,7 +53,9 @@ __global__ void mysgemm(int m, int n, int k, const float *A, const float *B, flo
         __syncthreads();
     }
 
-    C[row * n + col] = sum;
+    if ((row < m) && (col < m)){
+        C[row * m + col] = sum;
+    }
 }
 void basicSgemm(char transa, char transb, int m, int n, int k, float alpha, const float *A, int lda, const float *B, int ldb, float beta, float *C, int ldc)
 {
