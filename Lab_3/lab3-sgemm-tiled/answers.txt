@@ -1,0 +1,35 @@
+1. With tile size 16:   Setting up the problem...0.016730 s
+                            A: 1000 x 1000
+                            B: 1000 x 1000
+                            C: 1000 x 1000
+                        Allocating device variables...0.081012 s
+                        Copying data from host to device...0.000861 s
+                        Launching kernel...0.000806 s
+                        Copying data from device to host...0.001562 s
+                        Verifying results...TEST PASSED
+    With tile size 32:  Setting up the problem...0.016942 s
+                            A: 1000 x 1000
+                            B: 1000 x 1000
+                            C: 1000 x 1000
+                        Allocating device variables...0.084594 s
+                        Copying data from host to device...0.000867 s
+                        Launching kernel...0.000917 s
+                        Copying data from device to host...0.001531 s
+                        Verifying results...TEST PASSED
+    The calculation with tile size 16 is faster at making the calculation in the kernel, and usually takes
+    about the same amount of time to copy data.
+    With tile size 64, the test fails.
+
+2. Without tiling:  Setting up the problem...0.016751 s
+                        A: 1000 x 1000
+                        B: 1000 x 1000
+                        C: 1000 x 1000
+                    Allocating device variables...0.080002 s
+                    Copying data from host to device...0.000867 s
+                    Launching kernel...0.001095 s
+                    Copying data from device to host...0.001575 s
+                    Verifying results...TEST PASSED
+    The kernel calculation takes significantly longer without tiling. The reason for this is that the
+    data is copied into the shared memory in subsets called tiles. This means that the individual
+    elements in the matrices don't need to be retrieved from the global memory as often, which takes
+    longer than retrieving from shared memory.
